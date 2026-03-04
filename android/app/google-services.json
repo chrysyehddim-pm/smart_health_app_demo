@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "475970550783",
+    "project_id": "smart-squat-health",
+    "storage_bucket": "smart-squat-health.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:475970550783:android:bc22764ff27e8c0deb05ca",
+        "android_client_info": {
+          "package_name": "com.happygo.smarthealth.demo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCt8PjkAdIANZrycLps4Lujb2DQaJBloLA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
