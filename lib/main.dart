@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // ==========================================
-// 1. 全域狀態管理 (AppState - 支援 God Mode)
+// 1. 全域狀態管理 (AppState)
 // ==========================================
 enum UserIdentity { guest, newPhoneUser, hgBoundUser }
 enum AiScenario { mobilityDecline, vitalsWarning, perfectConsistency } 
@@ -15,14 +15,14 @@ class AppState extends ChangeNotifier {
   factory AppState() => _instance;
   AppState._internal();
 
-  UserIdentity currentIdentity = UserIdentity.hgBoundUser; // 預設展示 HG 老客
-  AiScenario currentScenario = AiScenario.perfectConsistency; // 預設展示最高含金量情境
+  UserIdentity currentIdentity = UserIdentity.guest; // 預設從訪客/未登入開始
+  AiScenario currentScenario = AiScenario.perfectConsistency; 
   double textScale = 1.0; 
 
-  String userName = 'Chrys';
-  int healthPoints = 12500;
-  String title = '鋼鐵不老翁'; // 稱號系統
-  Map<String, double> radar3D = {'腦動力': 0.9, '行動力': 0.9, '防護力': 0.9};
+  String userName = '訪客';
+  int healthPoints = 0;
+  String title = '尚未註冊'; 
+  Map<String, double> radar3D = {'腦動力': 0.0, '行動力': 0.0, '防護力': 0.0};
 
   void toggleTextScale() { textScale = textScale == 1.0 ? 1.3 : 1.0; notifyListeners(); }
   
@@ -30,13 +30,13 @@ class AppState extends ChangeNotifier {
     currentScenario = scenario; 
     switch(scenario) {
       case AiScenario.mobilityDecline:
-        radar3D = {'腦動力': 0.8, '行動力': 0.3, '防護力': 0.8}; // 行動力凹陷
+        radar3D = {'腦動力': 0.8, '行動力': 0.3, '防護力': 0.8}; 
         break;
       case AiScenario.vitalsWarning:
-        radar3D = {'腦動力': 0.7, '行動力': 0.7, '防護力': 0.2}; // 防護力凹陷
+        radar3D = {'腦動力': 0.7, '行動力': 0.7, '防護力': 0.2}; 
         break;
       case AiScenario.perfectConsistency:
-        radar3D = {'腦動力': 0.95, '行動力': 0.9, '防護力': 0.95}; // 接近滿分
+        radar3D = {'腦動力': 0.95, '行動力': 0.9, '防護力': 0.95}; 
         break;
     }
     notifyListeners(); 
@@ -46,14 +46,14 @@ class AppState extends ChangeNotifier {
     currentIdentity = identity;
     switch (identity) {
       case UserIdentity.guest:
-        userName = '訪客'; healthPoints = 0; title = '尚未註冊'; radar3D = {'腦動力': 0.0, '行動力': 0.0, '防護力': 0.0};
+        userName = '訪客'; healthPoints = 0; title = '尚未註冊'; radar3D = {'腦動力': 0.1, '行動力': 0.1, '防護力': 0.1};
         break;
       case UserIdentity.newPhoneUser:
         userName = '0912***789'; healthPoints = 50; title = '健康新手'; radar3D = {'腦動力': 0.4, '行動力': 0.4, '防護力': 0.4};
         break;
       case UserIdentity.hgBoundUser:
-        userName = 'Chrys (HG 已綁定)'; healthPoints = 12500; title = '鋼鐵不老翁'; 
-        switchScenario(AiScenario.perfectConsistency); // 重置為高分
+        userName = 'Chrys'; healthPoints = 12500; title = '鋼鐵不老翁'; 
+        switchScenario(AiScenario.perfectConsistency); 
         break;
     }
     notifyListeners();
@@ -72,6 +72,11 @@ Future<void> _launchUrl(String url) async {
   if (!await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication)) debugPrint('Could not launch $url');
 }
 
+// 現代化色彩定義 (仿 Tailwind)
+const Color primaryEmerald = Color(0xFF10B981);
+const Color darkTeal = Color(0xFF0F766E);
+const Color bgGray = Color(0xFFF9FAFB);
+
 class HappyHealthApp extends StatelessWidget {
   const HappyHealthApp({super.key});
   @override
@@ -80,28 +85,90 @@ class HappyHealthApp extends StatelessWidget {
       animation: appState,
       builder: (context, child) {
         return MaterialApp(
-          title: 'Happy Health Phase 2',
+          title: 'Happy Health',
           debugShowCheckedModeBanner: false,
           useInheritedMediaQuery: true,
           locale: DevicePreview.locale(context),
           builder: (context, widget) {
             Widget app = DevicePreview.appBuilder(context, widget);
             return MediaQuery(
-              // ignore: deprecated_member_use
-              data: MediaQuery.of(context).copyWith(textScaleFactor: appState.textScale), 
+              data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(appState.textScale)), 
               child: app,
             );
           },
           theme: ThemeData(
             useMaterial3: true,
-            scaffoldBackgroundColor: const Color(0xFFF5F7FA),
-            appBarTheme: const AppBarTheme(backgroundColor: Colors.white, elevation: 0, centerTitle: true, titleTextStyle: TextStyle(color: Colors.black87, fontSize: 18, fontWeight: FontWeight.bold), iconTheme: IconThemeData(color: Colors.black87)),
-            colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFE65100), primary: const Color(0xFFE65100), secondary: const Color(0xFF004D40), background: const Color(0xFFF5F7FA)),
+            scaffoldBackgroundColor: bgGray,
+            appBarTheme: const AppBarTheme(backgroundColor: Colors.white, elevation: 0, centerTitle: true, titleTextStyle: TextStyle(color: Color(0xFF1F2937), fontSize: 18, fontWeight: FontWeight.bold), iconTheme: IconThemeData(color: Color(0xFF1F2937))),
+            colorScheme: ColorScheme.fromSeed(seedColor: primaryEmerald, primary: primaryEmerald, secondary: darkTeal, background: bgGray),
             textTheme: GoogleFonts.notoSansTcTextTheme(),
           ),
-          home: const MainNavigator(), // Phase 2 直接進入主結構
+          home: const LoginScreen(), // 1. 起始頁改為登入頁
         );
       },
+    );
+  }
+}
+
+// ==========================================
+// 📍 全新：登入與身分融合頁面 (Login Screen)
+// ==========================================
+class LoginScreen extends StatelessWidget {
+  const LoginScreen({super.key});
+
+  void _loginAndGo(BuildContext context, UserIdentity identity) {
+    appState.switchIdentity(identity);
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainNavigator()));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Spacer(),
+              // Logo 區塊
+              Container(
+                width: 80, height: 80,
+                decoration: BoxDecoration(color: primaryEmerald.withOpacity(0.1), shape: BoxShape.circle),
+                child: const Icon(Icons.favorite_rounded, color: primaryEmerald, size: 40),
+              ),
+              const SizedBox(height: 24),
+              const Text('Happy Health\n智慧健康服務', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, height: 1.2, color: Color(0xFF1F2937))),
+              const SizedBox(height: 12),
+              const Text('每天三分鐘，玩出健康新生活\n授權登入，累積您的專屬健康資產。', style: TextStyle(fontSize: 14, color: Colors.grey, height: 1.5)),
+              const Spacer(),
+              
+              // 登入按鈕群
+              ElevatedButton.icon(
+                onPressed: () => _loginAndGo(context, UserIdentity.hgBoundUser),
+                icon: const Icon(Icons.flash_on, size: 20),
+                label: const Text('HAPPY GO 快速登入 (推薦)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFF59E0B), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 0),
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
+                onPressed: () => _loginAndGo(context, UserIdentity.newPhoneUser),
+                icon: const Icon(Icons.phone_android, size: 20),
+                label: const Text('手機號碼註冊 / 登入'),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.grey[100], foregroundColor: const Color(0xFF1F2937), padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 0),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () => _loginAndGo(context, UserIdentity.guest),
+                child: const Text('先逛逛，稍後再註冊', style: TextStyle(color: Colors.grey)),
+              ),
+              const SizedBox(height: 20),
+              const Text('登入即代表您同意 服務條款 與 隱私權政策', textAlign: TextAlign.center, style: TextStyle(fontSize: 11, color: Colors.grey)),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -117,7 +184,7 @@ class GodModeFab extends StatelessWidget {
     return Positioned(
       left: 16, bottom: 16,
       child: FloatingActionButton.small(
-        heroTag: 'god_mode', backgroundColor: Colors.black87, foregroundColor: Colors.yellowAccent,
+        heroTag: 'god_mode', backgroundColor: const Color(0xFF1F2937), foregroundColor: Colors.amber,
         onPressed: () => _showConsole(context),
         child: const Icon(Icons.tune),
       ),
@@ -134,43 +201,32 @@ class GodModeFab extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('⚡️ Phase 2 商業展示控制台', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text('⚡️ 商業展示控制台', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 24),
-              
-              const Text('1. 身分與 SSO 融合切換', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+              const Text('1. 身分切換 (檢視不同權限)', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold, fontSize: 12)),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8, runSpacing: 8,
                 children: [
                   _buildOptBtn(context, '訪客模式', UserIdentity.guest, appState.currentIdentity == UserIdentity.guest),
                   _buildOptBtn(context, '純手機新戶', UserIdentity.newPhoneUser, appState.currentIdentity == UserIdentity.newPhoneUser),
-                  _buildOptBtn(context, 'HG SSO 老客', UserIdentity.hgBoundUser, appState.currentIdentity == UserIdentity.hgBoundUser),
+                  _buildOptBtn(context, 'HG 老客', UserIdentity.hgBoundUser, appState.currentIdentity == UserIdentity.hgBoundUser),
                 ],
               ),
               const SizedBox(height: 24),
-              
-              const Text('2. AI 商業變現場景 (連動 3D 雷達)', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+              const Text('2. 動態 AI 推薦場景 (連動雷達)', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold, fontSize: 12)),
               const SizedBox(height: 8),
               Column(
                 children: [
-                  _buildAiBtn(context, '情境 A：行動力衰退 (導購 CPS)', AiScenario.mobilityDecline, appState.currentScenario == AiScenario.mobilityDecline, Colors.orange),
+                  _buildAiBtn(context, '情境 A：行動力衰退 (導購)', AiScenario.mobilityDecline, appState.currentScenario == AiScenario.mobilityDecline, Colors.orange),
                   const SizedBox(height: 8),
-                  _buildAiBtn(context, '情境 B：防護力異常 (名單 CPL)', AiScenario.vitalsWarning, appState.currentScenario == AiScenario.vitalsWarning, Colors.redAccent),
+                  _buildAiBtn(context, '情境 B：防護力異常 (名單)', AiScenario.vitalsWarning, appState.currentScenario == AiScenario.vitalsWarning, Colors.redAccent),
                   const SizedBox(height: 8),
-                  _buildAiBtn(context, '情境 C：連續達標滿分 (贊助/保險)', AiScenario.perfectConsistency, appState.currentScenario == AiScenario.perfectConsistency, Colors.green),
+                  _buildAiBtn(context, '情境 C：連續滿分 (外溢保單)', AiScenario.perfectConsistency, appState.currentScenario == AiScenario.perfectConsistency, primaryEmerald),
                 ],
               ),
-              
               const SizedBox(height: 24),
-              const Divider(),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.text_increase, color: Colors.deepPurple),
-                title: const Text('樂齡大字模式 (Demo 專用)', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.deepPurple)),
-                trailing: Switch(value: appState.textScale > 1.0, onChanged: (v) { appState.toggleTextScale(); Navigator.pop(context); }, activeColor: Colors.deepPurple),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(width: double.infinity, child: ElevatedButton(onPressed: () => Navigator.pop(context), style: ElevatedButton.styleFrom(backgroundColor: Colors.black87, foregroundColor: Colors.white), child: const Text('關閉')))
+              SizedBox(width: double.infinity, child: ElevatedButton(onPressed: () => Navigator.pop(context), style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1F2937), foregroundColor: Colors.white), child: const Text('關閉')))
             ],
           ),
         );
@@ -178,8 +234,8 @@ class GodModeFab extends StatelessWidget {
     );
   }
 
-  Widget _buildOptBtn(BuildContext context, String label, UserIdentity identity, bool isSel) => ElevatedButton(onPressed: () { appState.switchIdentity(identity); Navigator.pop(context); }, style: ElevatedButton.styleFrom(backgroundColor: isSel ? const Color(0xFF004D40) : Colors.grey[200], foregroundColor: isSel ? Colors.white : Colors.black87, elevation: 0), child: Text(label, style: const TextStyle(fontSize: 12)));
-  Widget _buildAiBtn(BuildContext context, String label, AiScenario scenario, bool isSel, Color color) => SizedBox(width: double.infinity, child: ElevatedButton(onPressed: () { appState.switchScenario(scenario); Navigator.pop(context); }, style: ElevatedButton.styleFrom(backgroundColor: isSel ? color : Colors.grey[100], foregroundColor: isSel ? Colors.white : Colors.black87, elevation: 0, alignment: Alignment.centerLeft), child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold))));
+  Widget _buildOptBtn(BuildContext context, String label, UserIdentity identity, bool isSel) => ElevatedButton(onPressed: () { appState.switchIdentity(identity); Navigator.pop(context); }, style: ElevatedButton.styleFrom(backgroundColor: isSel ? darkTeal : Colors.grey[100], foregroundColor: isSel ? Colors.white : Colors.black87, elevation: 0), child: Text(label, style: const TextStyle(fontSize: 12)));
+  Widget _buildAiBtn(BuildContext context, String label, AiScenario scenario, bool isSel, Color color) => SizedBox(width: double.infinity, child: ElevatedButton(onPressed: () { appState.switchScenario(scenario); Navigator.pop(context); }, style: ElevatedButton.styleFrom(backgroundColor: isSel ? color : Colors.grey[50], foregroundColor: isSel ? Colors.white : Colors.black87, elevation: 0, alignment: Alignment.centerLeft, side: BorderSide(color: isSel ? Colors.transparent : Colors.grey.shade300)), child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold))));
 }
 
 // ==========================================
@@ -193,21 +249,17 @@ class _MainNavigatorState extends State<MainNavigator> {
   Widget build(BuildContext context) {
     final List<Widget> pages = [const HomePage(), const FamilyPage(), const PlayPage(), const RewardsPage(), const ProfilePage()];
     return Scaffold(
-      body: Stack(
-        children: [
-          pages[_currentIndex],
-          const GodModeFab(),
-        ],
-      ),
+      body: Stack(children: [pages[_currentIndex], const GodModeFab()]),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex, onDestinationSelected: (i) => setState(() => _currentIndex = i), 
-        backgroundColor: Colors.white, indicatorColor: const Color(0xFFFFCC80), 
+        backgroundColor: Colors.white, indicatorColor: primaryEmerald.withOpacity(0.2), 
+        elevation: 10, shadowColor: Colors.black12,
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: '大廳'), 
-          NavigationDestination(icon: Icon(Icons.family_restroom_outlined), selectedIcon: Icon(Icons.family_restroom), label: '親友'), 
-          NavigationDestination(icon: Icon(Icons.sports_esports_outlined), selectedIcon: Icon(Icons.sports_esports), label: '探索'), 
-          NavigationDestination(icon: Icon(Icons.account_balance_wallet_outlined), selectedIcon: Icon(Icons.account_balance_wallet), label: '票匣'), 
-          NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: '我的')
+          NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home, color: darkTeal), label: '大廳'), 
+          NavigationDestination(icon: Icon(Icons.family_restroom_outlined), selectedIcon: Icon(Icons.family_restroom, color: darkTeal), label: '親友'), 
+          NavigationDestination(icon: Icon(Icons.sports_esports_outlined), selectedIcon: Icon(Icons.sports_esports, color: darkTeal), label: '任務'), 
+          NavigationDestination(icon: Icon(Icons.account_balance_wallet_outlined), selectedIcon: Icon(Icons.account_balance_wallet, color: darkTeal), label: '票匣'), 
+          NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person, color: darkTeal), label: '我的')
         ]
       ),
     );
@@ -215,7 +267,7 @@ class _MainNavigatorState extends State<MainNavigator> {
 }
 
 // ==========================================
-// 📍 Tab 1: 首頁大廳 (Home) - 意圖觸發與導購印鈔機
+// 📍 Tab 1: 首頁大廳 (Home) - 現代化 UI
 // ==========================================
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -225,129 +277,140 @@ class HomePage extends StatelessWidget {
     bool isGuest = appState.currentIdentity == UserIdentity.guest;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Happy Health', style: TextStyle(color: Color(0xFFE65100))), actions: [IconButton(icon: const Icon(Icons.notifications_none), onPressed: (){})]),
+      appBar: AppBar(
+        title: const Text('Happy Health', style: TextStyle(color: darkTeal, fontWeight: FontWeight.w900, letterSpacing: 0.5)), 
+        actions: [IconButton(icon: const Icon(Icons.notifications_outlined), onPressed: (){})],
+      ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 80),
+        padding: const EdgeInsets.fromLTRB(20, 10, 20, 80),
         children: [
-          _buildStatusCard(context),
-          const SizedBox(height: 16),
+          _buildHeroStatusCard(context), // 現代化漸層卡片
+          const SizedBox(height: 24),
           
           if (!isGuest) ...[
-            // 3D 商業雷達與 AI 助理 (核心變現區塊)
-            _buildAiAgentCard(context),
+            _buildRadarAndAiCard(context), // 個人健康雷達 + AI 推銷
             const SizedBox(height: 24),
             
-            const Row(children: [Icon(Icons.task_alt, color: Colors.teal), SizedBox(width: 8), Text('今日 3 分鐘打卡', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))]),
+            // 補上：生理數據與趨勢入口
+            const Text('健康趨勢與紀錄', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1F2937))),
             const SizedBox(height: 12),
-            _buildTaskCard('腦力激盪', '玩一場眼力極限遊戲', Icons.psychology, Colors.orange),
-            _buildTaskCard('行動力維持', '完成金幣深蹲王 15 下', Icons.accessibility_new, Colors.purple),
+            _buildTrendCard(context),
           ],
           
           if (isGuest) ...[
-            Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.orange[50], borderRadius: BorderRadius.circular(16)), child: const Column(children: [Text('您目前為訪客體驗模式', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.deepOrange)), SizedBox(height: 8), Text('註冊即可解鎖 AI 健康管家、領取健康點數，並與家人連線！', textAlign: TextAlign.center, style: TextStyle(fontSize: 12))])),
-            const SizedBox(height: 24),
+            Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: Colors.amber.shade50, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.amber.shade200)), child: Column(children: [const Icon(Icons.lock_person, size: 40, color: Colors.amber), const SizedBox(height: 12), const Text('您目前為訪客體驗模式', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFB45309), fontSize: 16)), const SizedBox(height: 8), const Text('註冊即可解鎖專屬健康雷達、趨勢追蹤，\n並開始累積健康點數！', textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: Color(0xFF78350F), height: 1.5)), const SizedBox(height: 16), ElevatedButton(onPressed: (){}, style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFF59E0B), foregroundColor: Colors.white, elevation: 0), child: const Text('立即註冊 / 登入'))])),
           ],
-
-          const SizedBox(height: 24),
-          const Row(children: [Icon(Icons.local_hospital, color: Colors.blue), SizedBox(width: 8), Text('亞東醫院 衛教專區', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))]),
-          const SizedBox(height: 12),
-          _buildArticleCard('解鎖大腦健康失智症新趨勢', '神經醫學部 黃彥翔 主任', 'https://www.femh.org.tw/magazine/viewmag.aspx?ID=11889'),
-          _buildArticleCard('常常頭痛怎麼辦？', '神經醫學部 賴資賢 主任', 'https://www.femh.org.tw/research/news_detail.aspx?NewsNo=14687&Class=1'),
         ],
       ),
     );
   }
 
-  // 狀態與稱號卡
-  Widget _buildStatusCard(BuildContext context) {
+  // 1. 現代化漸層狀態卡 (復刻 HTML 質感)
+  Widget _buildHeroStatusCard(BuildContext context) {
+    bool isBound = appState.currentIdentity == UserIdentity.hgBoundUser;
+    
     return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFFE65100), Color(0xFFFFB74D)]), borderRadius: BorderRadius.circular(24), boxShadow: [BoxShadow(color: Colors.orange.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))]),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(colors: [primaryEmerald, darkTeal], begin: Alignment.topLeft, end: Alignment.bottomRight), 
+        borderRadius: BorderRadius.circular(24), 
+        boxShadow: [BoxShadow(color: primaryEmerald.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 8))]
+      ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(children: [
-            const CircleAvatar(radius: 28, backgroundColor: Colors.white, child: Icon(Icons.person, size: 36, color: Color(0xFFE65100))),
-            const SizedBox(width: 16),
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(appState.userName, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 6),
-              Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(12)), child: Text('稱號：${appState.title}', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold))),
-            ]))
-          ]),
-          const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-            child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Text('健康點 (HP)', style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold)), Row(children: [const Icon(Icons.stars, color: Colors.amber, size: 20), const SizedBox(width: 6), Text('${appState.healthPoints}', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87))])]),
-              if (appState.currentIdentity == UserIdentity.guest) ElevatedButton(onPressed: (){}, style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE65100), foregroundColor: Colors.white), child: const Text('立即註冊'))
-              else const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey)
-            ]),
-          )
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('早安，${appState.userName} ☀️', style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)), child: Text('🏅 稱號：${appState.title}', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold))),
+                      if (isBound) ...[
+                        const SizedBox(width: 8),
+                        Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), decoration: BoxDecoration(color: const Color(0xFFF59E0B), borderRadius: BorderRadius.circular(12)), child: const Text('HG 已綁定', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold))),
+                      ]
+                    ],
+                  ),
+                ],
+              ),
+              const CircleAvatar(radius: 24, backgroundColor: Colors.white24, child: Icon(Icons.person, color: Colors.white)),
+            ],
+          ),
+          const SizedBox(height: 24),
+          const Text('我的健康點 (Pts)', style: TextStyle(color: Colors.white70, fontSize: 12)),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text('${appState.healthPoints}', style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: -1)),
+              const SizedBox(width: 4), const Text('點', style: TextStyle(color: Colors.white70, fontSize: 14)),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  // AI 規則引擎管家 (結合 3D 雷達)
-  Widget _buildAiAgentCard(BuildContext context) {
+  // 2. 個人健康雷達 + AI 管家 (去除生硬商業詞)
+  Widget _buildRadarAndAiCard(BuildContext context) {
     String aiTitle, aiMsg, btn1Txt, btn2Txt;
-    IconData btn1Icon, btn2Icon;
-    Color themeColor;
+    IconData btn1Icon, btn2Icon; Color themeColor;
 
     switch(appState.currentScenario) {
       case AiScenario.mobilityDecline:
-        themeColor = Colors.orange; aiTitle = "健康警訊與提案";
-        aiMsg = "早安，${appState.userName}。系統偵測到您近期『行動力』標籤有衰退趨勢。\n\n根據亞東醫院復健科專欄建議，我已為您爭取到【大樹藥局 - 葡萄糖胺】的專屬優惠，以及自費復健評估專案，請問需要為您安排嗎？";
-        btn1Txt = "用 500 點換購葡萄糖胺"; btn1Icon = Icons.shopping_cart;
-        btn2Txt = "預約亞東自費復健 (+1000 Pts)"; btn2Icon = Icons.calendar_month;
+        themeColor = Colors.orange; aiTitle = "健康守護提案";
+        aiMsg = "系統觀察到您近期的『行動力』指標有下降趨勢。為保護關節健康，我為您爭取到【大樹藥局 - 葡萄糖胺】專屬優惠，以及自費復健評估專案，請問需要安排嗎？";
+        btn1Txt = "用 500 點換購葡萄糖胺"; btn1Icon = Icons.shopping_cart; btn2Txt = "預約亞東自費復健"; btn2Icon = Icons.calendar_month;
         break;
       case AiScenario.vitalsWarning:
         themeColor = Colors.redAccent; aiTitle = "防護力異常警示";
-        aiMsg = "${appState.userName} 您好，您近期的 AD8 檢測與防護力數值出現異常波動。為了您的健康，AI 建議您進一步了解【亞東醫院高階腦部 MRI 健檢專案】，及早發現及早預防。";
-        btn1Txt = "了解高階健檢專案"; btn1Icon = Icons.medical_services;
-        btn2Txt = "重新進行 AD8 檢測"; btn2Icon = Icons.refresh;
+        aiMsg = "您近期的防護力數值出現異常波動。為了您的健康，建議您進一步了解【亞東醫院高階腦部 MRI 健檢專案】，及早發現及早預防。";
+        btn1Txt = "了解高階健檢專案"; btn1Icon = Icons.medical_services; btn2Txt = "重新進行檢測"; btn2Icon = Icons.refresh;
         break;
       case AiScenario.perfectConsistency:
-        themeColor = Colors.green; aiTitle = "極致健康解鎖";
-        aiMsg = "太棒了，${appState.userName}！您已【連續 30 天完成打卡】，且『三大健康力』超越 95% 用戶！\n\nAI 已為您解鎖隱藏版福利：購買【南山人壽外溢保單】可直接減免首年保費 10%，同時桂格也送您一份專屬禮物！";
-        btn1Txt = "領取保單 10% 減免憑證"; btn1Icon = Icons.shield;
-        btn2Txt = "領取桂格完膳贊助兌換券"; btn2Icon = Icons.card_giftcard;
+        themeColor = primaryEmerald; aiTitle = "極致健康解鎖";
+        aiMsg = "太棒了！您已【連續 30 天達標】，且三大健康力超越 95% 用戶！\n\nAI 已為您解鎖隱藏福利：購買【南山人壽外溢保單】首年保費減免 10%，同時桂格送您專屬禮物！";
+        btn1Txt = "領取保單 10% 減免憑證"; btn1Icon = Icons.shield; btn2Txt = "領取桂格贊助兌換券"; btn2Icon = Icons.card_giftcard;
         break;
     }
 
     return Container(
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: themeColor.withOpacity(0.3), width: 2), boxShadow: [BoxShadow(color: themeColor.withOpacity(0.1), blurRadius: 15, offset: const Offset(0, 8))]),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), border: Border.all(color: Colors.grey.shade100), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, offset: const Offset(0, 4))]),
       child: Column(
         children: [
-          // 上半部：3D 雷達圖
+          // 上半部：個人健康雷達
           Container(
-            padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.grey[50], borderRadius: const BorderRadius.vertical(top: Radius.circular(18))),
+            padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: bgGray, borderRadius: const BorderRadius.vertical(top: Radius.circular(24))),
             child: Row(
               children: [
-                SizedBox(width: 120, height: 120, child: CustomPaint(painter: TriangleRadarPainter(stats: appState.radar3D))),
-                const SizedBox(width: 16),
+                SizedBox(width: 110, height: 110, child: CustomPaint(painter: TriangleRadarPainter(stats: appState.radar3D))),
+                const SizedBox(width: 20),
                 Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  const Text('3D 商業健康力', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)), const SizedBox(height: 8),
-                  _buildRadarStatBar('🧠 腦動力', appState.radar3D['腦動力']!, Colors.orange),
-                  _buildRadarStatBar('🏃‍♂️ 行動力', appState.radar3D['行動力']!, Colors.purple),
-                  _buildRadarStatBar('🛡️ 防護力', appState.radar3D['防護力']!, Colors.blue),
+                  const Text('個人健康雷達', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF1F2937))), const SizedBox(height: 10),
+                  _buildRadarStatBar('🧠 腦動力', appState.radar3D['腦動力']!, Colors.amber.shade500),
+                  _buildRadarStatBar('🏃‍♂️ 行動力', appState.radar3D['行動力']!, Colors.blue.shade400),
+                  _buildRadarStatBar('🛡️ 防護力', appState.radar3D['防護力']!, primaryEmerald),
                 ]))
               ],
             ),
           ),
-          // 下半部：AI 話術與按鈕
+          // 下半部：AI 語氣推薦
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(children: [Icon(Icons.smart_toy, color: themeColor), const SizedBox(width: 8), Text('AI 管家：$aiTitle', style: TextStyle(color: themeColor, fontWeight: FontWeight.bold))]),
+                Row(children: [Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: themeColor.withOpacity(0.1), borderRadius: BorderRadius.circular(8)), child: Icon(Icons.auto_awesome, color: themeColor, size: 16)), const SizedBox(width: 8), Text('AI 專屬管家：$aiTitle', style: TextStyle(color: themeColor, fontWeight: FontWeight.bold))]),
                 const SizedBox(height: 12),
-                Text(aiMsg, style: const TextStyle(height: 1.6, color: Colors.black87, fontSize: 13)),
+                Text(aiMsg, style: const TextStyle(height: 1.6, color: Color(0xFF4B5563), fontSize: 13)),
                 const SizedBox(height: 16),
-                SizedBox(width: double.infinity, child: ElevatedButton.icon(onPressed: () => _showToast(context, '已存入票匣！'), icon: Icon(btn1Icon, size: 18), label: Text(btn1Txt), style: ElevatedButton.styleFrom(backgroundColor: themeColor, foregroundColor: Colors.white))),
+                SizedBox(width: double.infinity, child: ElevatedButton.icon(onPressed: () {}, icon: Icon(btn1Icon, size: 18), label: Text(btn1Txt), style: ElevatedButton.styleFrom(backgroundColor: themeColor, foregroundColor: Colors.white, elevation: 0, padding: const EdgeInsets.symmetric(vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))))),
                 const SizedBox(height: 8),
-                SizedBox(width: double.infinity, child: OutlinedButton.icon(onPressed: () => _showToast(context, '已送出申請！'), icon: Icon(btn2Icon, size: 18), label: Text(btn2Txt), style: OutlinedButton.styleFrom(foregroundColor: themeColor, side: BorderSide(color: themeColor)))),
+                SizedBox(width: double.infinity, child: OutlinedButton.icon(onPressed: () {}, icon: Icon(btn2Icon, size: 18), label: Text(btn2Txt), style: OutlinedButton.styleFrom(foregroundColor: themeColor, padding: const EdgeInsets.symmetric(vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), side: BorderSide(color: themeColor.withOpacity(0.5))))),
               ],
             ),
           )
@@ -357,16 +420,26 @@ class HomePage extends StatelessWidget {
   }
 
   Widget _buildRadarStatBar(String label, double val, Color color) {
-    return Padding(padding: const EdgeInsets.only(bottom: 6), child: Row(children: [SizedBox(width: 65, child: Text(label, style: const TextStyle(fontSize: 10, color: Colors.black87))), Expanded(child: ClipRRect(borderRadius: BorderRadius.circular(4), child: LinearProgressIndicator(value: val, backgroundColor: Colors.grey[300], color: color, minHeight: 6)))]));
+    return Padding(padding: const EdgeInsets.only(bottom: 8), child: Row(children: [SizedBox(width: 65, child: Text(label, style: const TextStyle(fontSize: 11, color: Color(0xFF4B5563), fontWeight: FontWeight.w500))), Expanded(child: ClipRRect(borderRadius: BorderRadius.circular(6), child: LinearProgressIndicator(value: val, backgroundColor: Colors.grey.shade200, color: color, minHeight: 6)))]));
   }
 
-  void _showToast(BuildContext context, String msg) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg), behavior: SnackBarBehavior.floating));
-  
-  Widget _buildTaskCard(String title, String sub, IconData icon, Color color) => Card(margin: const EdgeInsets.only(bottom: 8), elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey.shade200)), child: ListTile(leading: Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(8)), child: Icon(icon, color: color)), title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)), subtitle: Text(sub, style: const TextStyle(fontSize: 12)), trailing: ElevatedButton(onPressed: (){}, style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF004D40), foregroundColor: Colors.white), child: const Text('前往'))));
-  Widget _buildArticleCard(String title, String sub, String url) => InkWell(onTap: () => _launchUrl(url), child: Card(margin: const EdgeInsets.only(bottom: 8), elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey.shade200)), child: ListTile(leading: Container(width: 50, height: 50, decoration: BoxDecoration(color: Colors.blue[50], borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.article, color: Colors.blue)), title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)), subtitle: Text(sub, style: const TextStyle(fontSize: 12)), trailing: const Icon(Icons.arrow_forward_ios, size: 12, color: Colors.grey))));
+  // 3. 補上：生理數據與趨勢卡片
+  Widget _buildTrendCard(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.grey.shade100), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))]),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        leading: Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(12)), child: Icon(Icons.monitor_heart, color: Colors.blue.shade600)),
+        title: const Text('生理數據與歷史趨勢', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+        subtitle: const Text('血壓、心跳、BMI及檢測紀錄', style: TextStyle(fontSize: 12, color: Colors.grey)),
+        trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+        onTap: () {}, // 導向詳細數據頁
+      ),
+    );
+  }
 }
 
-// 🔺 三角形 3D 雷達繪製邏輯
+// 🔺 三角形雷達繪製邏輯
 class TriangleRadarPainter extends CustomPainter {
   final Map<String, double> stats;
   TriangleRadarPainter({required this.stats});
@@ -374,101 +447,30 @@ class TriangleRadarPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     double cx = size.width / 2; double cy = size.height / 2 + 10; double r = size.width / 2 * 0.8;
     Paint bgPaint = Paint()..color = Colors.grey.shade300..style = PaintingStyle.stroke..strokeWidth = 1;
-    Paint fillPaint = Paint()..color = const Color(0xFFE65100).withOpacity(0.3)..style = PaintingStyle.fill;
-    Paint linePaint = Paint()..color = const Color(0xFFE65100)..style = PaintingStyle.stroke..strokeWidth = 2;
+    Paint fillPaint = Paint()..color = primaryEmerald.withOpacity(0.2)..style = PaintingStyle.fill;
+    Paint linePaint = Paint()..color = primaryEmerald..style = PaintingStyle.stroke..strokeWidth = 2;
     TextPainter tp = TextPainter(textDirection: TextDirection.ltr);
-
-    List<String> labels = ['腦動力', '行動力', '防護力'];
-    List<double> angles = [-pi/2, pi/6, 5*pi/6]; // 頂、右下、左下
-
-    // 畫背景網格 (3層)
+    List<String> labels = ['腦動力', '行動力', '防護力']; List<double> angles = [-pi/2, pi/6, 5*pi/6]; 
     for (int step = 1; step <= 3; step++) {
       Path path = Path(); double currentR = r * (step / 3);
-      for (int i = 0; i < 3; i++) {
-        double x = cx + currentR * cos(angles[i]); double y = cy + currentR * sin(angles[i]);
-        if (i == 0) path.moveTo(x, y); else path.lineTo(x, y);
-      }
+      for (int i = 0; i < 3; i++) { double x = cx + currentR * cos(angles[i]); double y = cy + currentR * sin(angles[i]); if (i == 0) path.moveTo(x, y); else path.lineTo(x, y); }
       path.close(); canvas.drawPath(path, bgPaint);
     }
-    // 畫數據
     Path dataPath = Path();
     for (int i = 0; i < 3; i++) {
-      double val = stats[labels[i]] ?? 0.1;
-      double x = cx + (r * val) * cos(angles[i]); double y = cy + (r * val) * sin(angles[i]);
+      double val = stats[labels[i]] ?? 0.1; double x = cx + (r * val) * cos(angles[i]); double y = cy + (r * val) * sin(angles[i]);
       if (i == 0) dataPath.moveTo(x, y); else dataPath.lineTo(x, y);
-      
-      // 畫標籤
       double lx = cx + (r + 15) * cos(angles[i]); double ly = cy + (r + 15) * sin(angles[i]);
-      tp.text = TextSpan(text: labels[i], style: const TextStyle(color: Colors.black54, fontSize: 10, fontWeight: FontWeight.bold));
+      tp.text = TextSpan(text: labels[i], style: const TextStyle(color: Color(0xFF6B7280), fontSize: 10, fontWeight: FontWeight.bold));
       tp.layout(); tp.paint(canvas, Offset(lx - tp.width/2, ly - tp.height/2));
     }
-    dataPath.close();
-    canvas.drawPath(dataPath, fillPaint); canvas.drawPath(dataPath, linePaint);
+    dataPath.close(); canvas.drawPath(dataPath, fillPaint); canvas.drawPath(dataPath, linePaint);
   }
   @override bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
 
 // ==========================================
-// 📍 Tab 2: 親友圈 (Family) - 逆向獎勵與關懷
-// ==========================================
-class FamilyPage extends StatelessWidget {
-  const FamilyPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    if (appState.currentIdentity == UserIdentity.guest) return _buildGuestBlocker(context);
-
-    return Scaffold(
-      appBar: AppBar(title: const Text('家人群組與獎勵')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.orange[50], borderRadius: BorderRadius.circular(12)), child: const Row(children: [Icon(Icons.info_outline, color: Colors.orange), SizedBox(width: 8), Expanded(child: Text('將您的健康點「轉贈」給子孫，或透過邀請連結關懷父母的健康狀況。', style: TextStyle(color: Colors.orange, fontSize: 12)))])),
-          const SizedBox(height: 24),
-          const Text('我邀請的家人', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          const SizedBox(height: 12),
-          _buildFamilyMemberCard(context, '大兒子', '已連線', true),
-          _buildFamilyMemberCard(context, '小女兒', '已連線', true),
-          const SizedBox(height: 12),
-          OutlinedButton.icon(onPressed: (){}, icon: const Icon(Icons.person_add), label: const Text('產生邀請連結 (Line/簡訊)')),
-          
-          const SizedBox(height: 32),
-          const Text('邀請我的家人 (長輩)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          const SizedBox(height: 12),
-          Card(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey.shade200)), child: ListTile(leading: const CircleAvatar(backgroundColor: Colors.blue, child: Icon(Icons.person, color: Colors.white)), title: const Text('爸爸', style: TextStyle(fontWeight: FontWeight.bold)), subtitle: const Text('今日已完成 2 項任務'), trailing: TextButton(onPressed: (){}, child: const Text('查看狀態')))),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFamilyMemberCard(BuildContext context, String name, String status, bool canGift) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8), elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey.shade200)),
-      child: ListTile(
-        leading: const CircleAvatar(backgroundColor: Colors.teal, child: Icon(Icons.person, color: Colors.white)),
-        title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(status, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-        trailing: canGift ? ElevatedButton.icon(onPressed: () => _showGiftDialog(context, name), icon: const Icon(Icons.card_giftcard, size: 16), label: const Text('轉贈點數'), style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE65100), foregroundColor: Colors.white)) : null,
-      ),
-    );
-  }
-
-  void _showGiftDialog(BuildContext context, String name) {
-    showDialog(
-      context: context,
-      builder: (c) => AlertDialog(
-        title: Text('轉贈健康點給 $name'),
-        content: const TextField(decoration: InputDecoration(labelText: '輸入轉贈點數', suffixText: 'Pts', border: OutlineInputBorder()), keyboardType: TextInputType.number),
-        actions: [TextButton(onPressed: () => Navigator.pop(c), child: const Text('取消')), ElevatedButton(onPressed: () { Navigator.pop(c); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('成功轉贈給 $name！'))); }, style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE65100), foregroundColor: Colors.white), child: const Text('確認轉贈'))],
-      )
-    );
-  }
-
-  Widget _buildGuestBlocker(BuildContext context) => Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [const Icon(Icons.lock_outline, size: 64, color: Colors.grey), const SizedBox(height: 16), const Text('註冊會員解鎖家人群組'), ElevatedButton(onPressed: (){}, child: const Text('立即註冊'))]));
-}
-
-// ==========================================
-// 📍 Tab 3: 探索任務庫 (Play) - Webview 遊戲入口
+// 📍 Tab 3: 任務中心 (Play) - 復刻 HTML UI
 // ==========================================
 class PlayPage extends StatelessWidget {
   const PlayPage({super.key});
@@ -476,71 +478,52 @@ class PlayPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('探索任務庫')),
+      appBar: AppBar(title: const Text('探索任務')),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         children: [
-          Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.blue[50], borderRadius: BorderRadius.circular(12)), child: const Text('💡 每次完成遊戲，皆可獲得健康點數，並有機會解鎖品牌專屬贊助折價券！', style: TextStyle(color: Colors.blue, fontSize: 12))),
+          // 頂部公告
+          Container(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), decoration: BoxDecoration(color: Colors.amber.shade50, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.amber.shade100)), child: Row(children: [const Icon(Icons.campaign, color: Colors.amber, size: 20), const SizedBox(width: 8), const Expanded(child: Text('完成今日打卡任務，賺取健康點數！', style: TextStyle(color: Color(0xFF92400E), fontSize: 13, fontWeight: FontWeight.w500)))] )),
           const SizedBox(height: 24),
-          const Text('腦動力特訓館', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)), const SizedBox(height: 8),
-          _buildGameCard('眼力極限考驗', '訓練專注力與反應', Icons.center_focus_strong, Colors.orange, 'https://chrysyehddim-pm.github.io/memory/'),
-          _buildGameCard('生活記憶力訓練', '短期記憶防護', Icons.psychology, Colors.teal, 'https://chrysyehddim-pm.github.io/memory/'),
+          
+          const Text('VIP 限定大禮包 (半年一次)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF1F2937))), const SizedBox(height: 12),
+          _buildHtmlStyleTaskCard('幸福柑仔店-大腦測試', '測您是不是金牌店長！', '安達人壽 守護專案', Icons.storefront, Colors.amber, '+ 50 點', 'https://chrysyehddim-pm.github.io/ad8test/'),
           
           const SizedBox(height: 24),
-          const Text('行動力挑戰館', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)), const SizedBox(height: 8),
-          _buildGameCard('金幣深蹲王', 'AI 鏡頭體感判定', Icons.accessibility_new, Colors.purple, 'https://chrysyehddim-pm.github.io/Squat-Game-PoC/'),
-          
-          const SizedBox(height: 24),
-          const Text('防護力檢測站', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)), const SizedBox(height: 8),
-          _buildGameCard('幸福柑仔店 - AD8', '極早期失智症趣味篩檢', Icons.storefront, Colors.blue, 'https://chrysyehddim-pm.github.io/ad8test/'),
+          const Text('每日賺點任務', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF1F2937))), const SizedBox(height: 12),
+          _buildHtmlStyleTaskCard('眼力極限考驗', '專注力大挑戰', '白蘭氏 葉黃素 贊助', Icons.remove_red_eye, Colors.blue, '+ 10 點', 'https://chrysyehddim-pm.github.io/memory/'),
+          _buildHtmlStyleTaskCard('金幣深蹲王', '跟著鏡頭動一動', 'World Gym 贊助', Icons.accessibility_new, Colors.purple, '+ 20 點', 'https://chrysyehddim-pm.github.io/Squat-Game-PoC/'),
+          _buildHtmlStyleTaskCard('生活好時光', '短期記憶防護', null, Icons.psychology, Colors.teal, '+ 10 點', 'https://chrysyehddim-pm.github.io/memory/'),
         ],
       ),
     );
   }
 
-  Widget _buildGameCard(String title, String sub, IconData icon, Color color, String url) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey.shade200)), elevation: 0,
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(12),
-        leading: Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: color, size: 28)),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)), subtitle: Text(sub, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-        trailing: ElevatedButton(onPressed: () => _launchUrl(url), style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF004D40), foregroundColor: Colors.white, elevation: 0), child: const Text('開始')),
-      ),
-    );
-  }
-}
-
-// ==========================================
-// 📍 Tab 4: 權益票匣 (Rewards) - 經濟閉環
-// ==========================================
-class RewardsPage extends StatelessWidget {
-  const RewardsPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    if (appState.currentIdentity == UserIdentity.guest) return _buildGuestBlocker();
-
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(title: const Text('權益票匣'), bottom: const TabBar(labelColor: Color(0xFFE65100), indicatorColor: Color(0xFFE65100), tabs: [Tab(text: '兌換中心'), Tab(text: '我的票匣')])),
-        body: TabBarView(
+  // 完美復刻 Phase 1 HTML Tailwind 質感的任務卡片
+  Widget _buildHtmlStyleTaskCard(String title, String sub, String? sponsor, IconData icon, MaterialColor color, String pts, String url) {
+    return GestureDetector(
+      onTap: () => _launchUrl(url),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey.shade200), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 2))]),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ListView(
-              padding: const EdgeInsets.all(16),
+            if (sponsor != null) ...[
+              Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: color.shade50, border: Border.all(color: color.shade100), borderRadius: BorderRadius.circular(4)), child: Text('贊助 | $sponsor', style: TextStyle(fontSize: 10, color: color.shade700, fontWeight: FontWeight.bold))),
+              const SizedBox(height: 10),
+            ],
+            Row(
               children: [
-                Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12)), child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('可用健康點', style: TextStyle(fontWeight: FontWeight.bold)), Text('${appState.healthPoints} Pts', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFFE65100)))])),
-                const SizedBox(height: 24), const Text('點數兌換', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)), const SizedBox(height: 12),
-                _buildExchangeItem(context, 'HAPPY GO 10 點', 300), _buildExchangeItem(context, '全家 Let\'s Café 中杯拿鐵', 1500),
-              ],
-            ),
-            ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                const Text('AI 專屬推薦與贊助', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.grey)), const SizedBox(height: 12),
-                Card(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: const BorderSide(color: Colors.orange)), child: ListTile(leading: const Icon(Icons.medication, color: Colors.orange), title: const Text('大樹藥局 葡萄糖胺 \$50 折價券', style: TextStyle(fontWeight: FontWeight.bold)), subtitle: const Text('期限：本月底'), trailing: ElevatedButton(onPressed: (){}, style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white), child: const Text('使用')))),
-                Card(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: const BorderSide(color: Colors.green)), child: ListTile(leading: const Icon(Icons.shield, color: Colors.green), title: const Text('南山人壽 外溢保單 10% 減免', style: TextStyle(fontWeight: FontWeight.bold)), subtitle: const Text('達標專屬'), trailing: ElevatedButton(onPressed: (){}, style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white), child: const Text('使用')))),
+                Container(width: 44, height: 44, decoration: BoxDecoration(color: color.shade50, borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: color.shade500)),
+                const SizedBox(width: 12),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF1F2937))), const SizedBox(height: 2), Text(sub, style: const TextStyle(fontSize: 12, color: Colors.grey))])),
+                Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                  Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(12)), child: Text(pts, style: TextStyle(color: Colors.green.shade700, fontSize: 12, fontWeight: FontWeight.bold))),
+                  const SizedBox(height: 4),
+                  Row(children: [Text('去挑戰', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: color.shade600)), Icon(Icons.play_arrow, size: 14, color: color.shade600)])
+                ])
               ],
             )
           ],
@@ -548,19 +531,10 @@ class RewardsPage extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildExchangeItem(BuildContext context, String title, int cost) {
-    bool canAfford = appState.healthPoints >= cost;
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8), elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey.shade200)),
-      child: ListTile(title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)), subtitle: Text('$cost Pts', style: const TextStyle(color: Color(0xFFE65100))), trailing: ElevatedButton(onPressed: canAfford ? () {} : null, style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF004D40), foregroundColor: Colors.white), child: const Text('兌換'))),
-    );
-  }
-  Widget _buildGuestBlocker() => Scaffold(appBar: AppBar(title: const Text('權益票匣')), body: Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [const Icon(Icons.lock_outline, size: 64, color: Colors.grey), const SizedBox(height: 16), const Text('註冊會員開始兌換獎品'), ElevatedButton(onPressed: (){}, child: const Text('立即註冊'))])));
 }
 
 // ==========================================
-// 📍 Tab 5: 我的 (Profile) - 帳號與設定
+// 📍 Tab 5: 我的 (Profile) - 完整功能擴充
 // ==========================================
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -572,27 +546,94 @@ class ProfilePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('會員中心')),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(vertical: 20),
         children: [
-          ListTile(leading: const CircleAvatar(radius: 30, child: Icon(Icons.person, size: 30)), title: Text(appState.userName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)), subtitle: Text(appState.title)),
-          const SizedBox(height: 24),
+          // 大頭貼與基本資料
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(children: [
+              const CircleAvatar(radius: 36, backgroundColor: Colors.white, child: Icon(Icons.account_circle, size: 72, color: Colors.grey)),
+              const SizedBox(width: 16),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(appState.userName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: Color(0xFF1F2937))),
+                const SizedBox(height: 4),
+                Text('目前身分：${appState.title}', style: const TextStyle(color: Colors.grey, fontSize: 13)),
+              ]))
+            ]),
+          ),
+          const SizedBox(height: 32),
           
+          // HG 綁定提示 (獨立區塊，不在名字旁邊干擾)
           if (!isBound && appState.currentIdentity != UserIdentity.guest) ...[
-            Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.red[50], borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.red.shade200)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Row(children: [Icon(Icons.warning_amber, color: Colors.red), SizedBox(width: 8), Text('尚未綁定 HAPPY GO 帳號', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red))]), const SizedBox(height: 8), const Text('綁定後即可同步您的健康積分，並兌換豐富實體商品！', style: TextStyle(fontSize: 12)), const SizedBox(height: 12), SizedBox(width: double.infinity, child: ElevatedButton(onPressed: (){}, style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white), child: const Text('立即綁定 (HG SSO)')))])),
+            Padding(padding: const EdgeInsets.symmetric(horizontal: 20), child: Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.amber.shade50, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.amber.shade200)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Row(children: [Icon(Icons.link, color: Colors.amber), SizedBox(width: 8), Text('尚未綁定 HAPPY GO 帳號', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFB45309)))]), const SizedBox(height: 8), const Text('綁定後即可同步您的健康積分，並兌換豐富實體商品！', style: TextStyle(fontSize: 12, color: Color(0xFF78350F))), const SizedBox(height: 12), SizedBox(width: double.infinity, child: ElevatedButton(onPressed: (){}, style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFF59E0B), foregroundColor: Colors.white, elevation: 0), child: const Text('立即綁定 (HG SSO)')))]))),
             const SizedBox(height: 24),
           ],
 
-          const Text('帳號與設定', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold, fontSize: 12)),
-          Card(margin: const EdgeInsets.only(top: 8, bottom: 16), elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey.shade200)), child: Column(children: [
-            ListTile(leading: const Icon(Icons.history), title: const Text('歷史紀錄總覽'), trailing: const Icon(Icons.arrow_forward_ios, size: 14), onTap: (){}), const Divider(height: 1), 
-            ListTile(leading: const Icon(Icons.verified_user), title: const Text('隱私權與授權設定'), subtitle: const Text('個人化推薦授權'), trailing: const Icon(Icons.arrow_forward_ios, size: 14), onTap: (){}),
-          ])),
-          
-          const Divider(),
-          ListTile(leading: const Icon(Icons.headset_mic), title: const Text('客服中心'), trailing: const Icon(Icons.arrow_forward_ios, size: 14), onTap: (){}),
-          ListTile(leading: const Icon(Icons.logout, color: Colors.red), title: const Text('登出帳號', style: TextStyle(color: Colors.red)), onTap: (){}),
+          _buildSectionTitle('我的健康與數據'),
+          _buildSettingsList([
+            _buildListTile(Icons.bar_chart, '健康趨勢與生理紀錄', '查看血壓、BMI與歷史測驗'),
+            _buildListTile(Icons.fact_check_outlined, '歷史任務與測驗紀錄', '您完成的互動任務軌跡'),
+            _buildListTile(Icons.monetization_on_outlined, '健康點數累兌明細', '點數獲得與兌換紀錄'),
+          ]),
+
+          _buildSectionTitle('帳號與安全'),
+          _buildSettingsList([
+            _buildListTile(Icons.manage_accounts_outlined, '個人資料設定', '修改手機、地址等資訊'),
+            _buildListTile(Icons.security_outlined, '隱私與數據授權', '管理您的個人化推薦同意狀態'),
+          ]),
+
+          _buildSectionTitle('關於本服務'),
+          _buildSettingsList([
+            _buildListTile(Icons.description_outlined, '服務條款與政策須知', null),
+            _buildListTile(Icons.help_outline, '常見問題與客服中心', null),
+          ]),
+
+          const SizedBox(height: 20),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: OutlinedButton(onPressed: () {}, style: OutlinedButton.styleFrom(foregroundColor: Colors.red, side: BorderSide(color: Colors.red.shade200), padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))), child: const Text('登出帳號', style: TextStyle(fontWeight: FontWeight.bold))),
+          ),
+          const SizedBox(height: 40),
         ],
       ),
     );
   }
+
+  Widget _buildSectionTitle(String title) => Padding(padding: const EdgeInsets.fromLTRB(24, 16, 24, 8), child: Text(title, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.grey.shade600)));
+  
+  Widget _buildSettingsList(List<Widget> children) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey.shade200)),
+      child: Column(children: children),
+    );
+  }
+
+  Widget _buildListTile(IconData icon, String title, String? sub) {
+    return Column(
+      children: [
+        ListTile(
+          leading: Icon(icon, color: darkTeal),
+          title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 15, color: Color(0xFF1F2937))),
+          subtitle: sub != null ? Text(sub, style: const TextStyle(fontSize: 12, color: Colors.grey)) : null,
+          trailing: const Icon(Icons.chevron_right, size: 20, color: Colors.grey),
+          onTap: () {},
+        ),
+        const Divider(height: 1, indent: 56, endIndent: 16, color: Color(0xFFF3F4F6)),
+      ],
+    );
+  }
+}
+
+// ==========================================
+// 📍 Tab 2: 親友圈 (Family) & Tab 4: 票匣 (Rewards) 保持精簡
+// ==========================================
+class FamilyPage extends StatelessWidget {
+  const FamilyPage({super.key});
+  @override Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text('家人群組')), body: const Center(child: Text('親友圈開發中...', style: TextStyle(color: Colors.grey))));
+}
+
+class RewardsPage extends StatelessWidget {
+  const RewardsPage({super.key});
+  @override Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text('權益票匣')), body: const Center(child: Text('兌換商城開發中...', style: TextStyle(color: Colors.grey))));
 }
