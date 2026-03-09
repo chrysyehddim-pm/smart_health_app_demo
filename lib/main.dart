@@ -52,7 +52,7 @@ class AppState extends ChangeNotifier {
         userName = '王小明'; healthPoints = 50; waterDrops = 100; streakDays = 1; title = '健康探險家'; radar3D = {'腦動力': 0.4, '行動力': 0.4, '防護力': 0.4}; hasFamilyGroup = false;
         break;
       case UserIdentity.hgBoundUser:
-        userName = 'Chrys'; healthPoints = 12500; waterDrops = 6500; streakDays = 3; title = '健康探險家'; hasFamilyGroup = true;
+        userName = 'Chrys'; healthPoints = 12500; waterDrops = 6500; streakDays = 3; title = '生態觀察家'; hasFamilyGroup = true;
         switchScenario(AiScenario.perfectConsistency); 
         break;
     }
@@ -74,7 +74,6 @@ Future<void> _launchUrl(String url) async {
   if (!await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication)) debugPrint('Could not launch $url');
 }
 
-// 色彩定義
 const Color primaryEmerald = Color(0xFF10B981);
 const Color darkTeal = Color(0xFF0F766E);
 const Color hgPurple = Color(0xFF673AB7); 
@@ -87,7 +86,7 @@ class HappyHealthApp extends StatelessWidget {
     return AnimatedBuilder(
       animation: appState,
       builder: (context, child) => MaterialApp(
-        title: 'Happy Health V3.1',
+        title: 'Happy Health V3.2',
         debugShowCheckedModeBanner: false,
         useInheritedMediaQuery: true, locale: DevicePreview.locale(context),
         builder: (context, widget) => MediaQuery(data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(appState.textScale)), child: DevicePreview.appBuilder(context, widget!)),
@@ -104,22 +103,13 @@ class HappyHealthApp extends StatelessWidget {
 }
 
 // ==========================================
-// 📍 登入與註冊流程 (完整版)
+// 📍 登入流程 
 // ==========================================
 class LoginScreen extends StatefulWidget { const LoginScreen({super.key}); @override State<LoginScreen> createState() => _LoginScreenState(); }
 class _LoginScreenState extends State<LoginScreen> {
   int _viewState = 0; 
-  void _simulateHgLogin() async {
-    setState(() => _viewState = 1);
-    await Future.delayed(const Duration(seconds: 2)); 
-    if (!mounted) return;
-    appState.switchIdentity(UserIdentity.hgBoundUser);
-    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainNavigator()));
-  }
-  void _finishPhoneFlow(bool isRegister) {
-    appState.switchIdentity(UserIdentity.newPhoneUser);
-    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainNavigator()));
-  }
+  void _simulateHgLogin() async { setState(() => _viewState = 1); await Future.delayed(const Duration(seconds: 2)); if (!mounted) return; appState.switchIdentity(UserIdentity.hgBoundUser); Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainNavigator())); }
+  void _finishPhoneFlow(bool isRegister) { appState.switchIdentity(UserIdentity.newPhoneUser); Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainNavigator())); }
 
   @override
   Widget build(BuildContext context) {
@@ -131,37 +121,26 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildCurrentView() {
-    if (_viewState == 1) return _buildLoadingView();
-    if (_viewState == 2) return _buildPhoneLoginView();
-    if (_viewState == 3) return _buildPhoneRegisterView();
-    return _buildMainMenuView();
+    if (_viewState == 1) return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [const CircularProgressIndicator(color: hgPurple), const SizedBox(height: 24), const Text('跳轉 HAPPY GO 授權中...', style: TextStyle(color: hgPurple, fontWeight: FontWeight.bold, fontSize: 16)), const SizedBox(height: 8), Text('安全登入，同步您的健康紀錄', style: TextStyle(color: Colors.grey, fontSize: 12))]));
+    if (_viewState == 2) return Padding(padding: const EdgeInsets.all(24.0), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [const Text('手機號碼登入', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)), const SizedBox(height: 8), const Text('請輸入您的手機與密碼', style: TextStyle(color: Colors.grey)), const SizedBox(height: 32), const TextField(decoration: InputDecoration(labelText: '手機號碼', prefixIcon: Icon(Icons.phone), border: OutlineInputBorder())), const SizedBox(height: 16), const TextField(obscureText: true, decoration: InputDecoration(labelText: '密碼', prefixIcon: Icon(Icons.lock), border: OutlineInputBorder())), const SizedBox(height: 24), ElevatedButton(onPressed: () => _finishPhoneFlow(false), style: ElevatedButton.styleFrom(backgroundColor: primaryEmerald, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 16)), child: const Text('登入'))]));
+    if (_viewState == 3) return ListView(padding: const EdgeInsets.all(24.0), children: [const Text('建立專屬健康帳號', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)), const SizedBox(height: 8), const Text('我們需要一些基本資料來提供精準的健康建議', style: TextStyle(color: Colors.grey)), const SizedBox(height: 32), const TextField(decoration: InputDecoration(labelText: '真實姓名', prefixIcon: Icon(Icons.person), border: OutlineInputBorder())), const SizedBox(height: 16), const TextField(decoration: InputDecoration(labelText: '生日 (YYYY/MM/DD)', prefixIcon: Icon(Icons.cake), border: OutlineInputBorder())), const SizedBox(height: 16), const TextField(decoration: InputDecoration(labelText: '手機號碼', prefixIcon: Icon(Icons.phone), border: OutlineInputBorder())), const SizedBox(height: 16), Row(children: [const Expanded(child: TextField(decoration: InputDecoration(labelText: '輸入 OTP 驗證碼', border: OutlineInputBorder()))), const SizedBox(width: 12), OutlinedButton(onPressed: (){}, style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)), child: const Text('發送簡訊'))]), const SizedBox(height: 32), ElevatedButton(onPressed: () => _finishPhoneFlow(true), style: ElevatedButton.styleFrom(backgroundColor: primaryEmerald, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 16)), child: const Text('同意條款並註冊'))]);
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Spacer(), Container(width: 80, height: 80, decoration: BoxDecoration(color: primaryEmerald.withOpacity(0.1), shape: BoxShape.circle), child: const Icon(Icons.favorite_rounded, color: primaryEmerald, size: 40)), const SizedBox(height: 24),
+          const Text('Happy Health\n智慧健康圖鑑', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, height: 1.2, color: Color(0xFF1F2937))), const SizedBox(height: 12),
+          const Text('每天三分鐘，玩出健康新生活\n和家人一起收集台灣特有種植物圖鑑！', style: TextStyle(fontSize: 14, color: Colors.grey, height: 1.5)), const Spacer(),
+          ElevatedButton(onPressed: _simulateHgLogin, style: ElevatedButton.styleFrom(backgroundColor: hgPurple, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 0), child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.flash_on, size: 20), SizedBox(width: 8), Text('HAPPY GO 授權登入', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold))])), const SizedBox(height: 12),
+          ElevatedButton.icon(onPressed: () => setState(() => _viewState = 2), icon: const Icon(Icons.phone_android, size: 20), label: const Text('手機號碼登入'), style: ElevatedButton.styleFrom(backgroundColor: Colors.grey[100], foregroundColor: const Color(0xFF1F2937), padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 0)), const SizedBox(height: 16),
+          Row(mainAxisAlignment: MainAxisAlignment.center, children: [const Text('還沒有帳號？', style: TextStyle(color: Colors.grey)), TextButton(onPressed: () => setState(() => _viewState = 3), child: const Text('全新註冊', style: TextStyle(color: darkTeal, fontWeight: FontWeight.bold)))]),
+          TextButton(onPressed: () { appState.switchIdentity(UserIdentity.guest); Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainNavigator())); }, child: const Text('先逛逛，稍後再註冊', style: TextStyle(color: Colors.grey, fontSize: 12))),
+        ],
+      ),
+    );
   }
-
-  Widget _buildLoadingView() => Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [const CircularProgressIndicator(color: hgPurple), const SizedBox(height: 24), const Text('跳轉 HAPPY GO 授權中...', style: TextStyle(color: hgPurple, fontWeight: FontWeight.bold, fontSize: 16)), const SizedBox(height: 8), Text('安全登入，同步您的健康紀錄', style: TextStyle(color: Colors.grey.shade500, fontSize: 12))]));
-
-  Widget _buildMainMenuView() => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const Spacer(),
-        Container(width: 80, height: 80, decoration: BoxDecoration(color: primaryEmerald.withOpacity(0.1), shape: BoxShape.circle), child: const Icon(Icons.favorite_rounded, color: primaryEmerald, size: 40)),
-        const SizedBox(height: 24),
-        const Text('Happy Health\n智慧健康服務', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, height: 1.2, color: Color(0xFF1F2937))), const SizedBox(height: 12),
-        const Text('每天三分鐘，玩出健康新生活\n雙軌積分機制，全家一起種出快樂花園。', style: TextStyle(fontSize: 14, color: Colors.grey, height: 1.5)),
-        const Spacer(),
-        ElevatedButton(onPressed: _simulateHgLogin, style: ElevatedButton.styleFrom(backgroundColor: hgPurple, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 0), child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.flash_on, size: 20), SizedBox(width: 8), Text('HAPPY GO 授權登入', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold))])),
-        const SizedBox(height: 12),
-        ElevatedButton.icon(onPressed: () => setState(() => _viewState = 2), icon: const Icon(Icons.phone_android, size: 20), label: const Text('手機號碼登入'), style: ElevatedButton.styleFrom(backgroundColor: Colors.grey[100], foregroundColor: const Color(0xFF1F2937), padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 0)),
-        const SizedBox(height: 16),
-        Row(mainAxisAlignment: MainAxisAlignment.center, children: [const Text('還沒有帳號？', style: TextStyle(color: Colors.grey)), TextButton(onPressed: () => setState(() => _viewState = 3), child: const Text('全新註冊', style: TextStyle(color: darkTeal, fontWeight: FontWeight.bold)))]),
-        TextButton(onPressed: () { appState.switchIdentity(UserIdentity.guest); Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainNavigator())); }, child: const Text('先逛逛，稍後再註冊', style: TextStyle(color: Colors.grey, fontSize: 12))),
-      ],
-    ),
-  );
-
-  Widget _buildPhoneLoginView() => Padding(padding: const EdgeInsets.all(24.0), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [const Text('手機號碼登入', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)), const SizedBox(height: 8), const Text('請輸入您的手機與密碼', style: TextStyle(color: Colors.grey)), const SizedBox(height: 32), const TextField(decoration: InputDecoration(labelText: '手機號碼', prefixIcon: Icon(Icons.phone), border: OutlineInputBorder())), const SizedBox(height: 16), const TextField(obscureText: true, decoration: InputDecoration(labelText: '密碼', prefixIcon: Icon(Icons.lock), border: OutlineInputBorder())), const SizedBox(height: 24), ElevatedButton(onPressed: () => _finishPhoneFlow(false), style: ElevatedButton.styleFrom(backgroundColor: primaryEmerald, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 16)), child: const Text('登入'))]));
-  Widget _buildPhoneRegisterView() => ListView(padding: const EdgeInsets.all(24.0), children: [const Text('建立專屬健康帳號', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)), const SizedBox(height: 8), const Text('我們需要一些基本資料來提供精準的健康建議', style: TextStyle(color: Colors.grey)), const SizedBox(height: 32), const TextField(decoration: InputDecoration(labelText: '真實姓名', prefixIcon: Icon(Icons.person), border: OutlineInputBorder())), const SizedBox(height: 16), const TextField(decoration: InputDecoration(labelText: '生日 (YYYY/MM/DD)', prefixIcon: Icon(Icons.cake), border: OutlineInputBorder())), const SizedBox(height: 16), const TextField(decoration: InputDecoration(labelText: '手機號碼', prefixIcon: Icon(Icons.phone), border: OutlineInputBorder())), const SizedBox(height: 16), Row(children: [const Expanded(child: TextField(decoration: InputDecoration(labelText: '輸入 OTP 驗證碼', border: OutlineInputBorder()))), const SizedBox(width: 12), OutlinedButton(onPressed: (){}, style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)), child: const Text('發送簡訊'))]), const SizedBox(height: 32), ElevatedButton(onPressed: () => _finishPhoneFlow(true), style: ElevatedButton.styleFrom(backgroundColor: primaryEmerald, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 16)), child: const Text('同意條款並註冊'))]);
 }
 
 // ==========================================
@@ -184,7 +163,7 @@ class GodModeFab extends StatelessWidget {
             const Text('1. 家族花園狀態', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold, fontSize: 12)), const SizedBox(height: 8),
             Row(children: [Expanded(child: _buildOptBtn(context, '無家族 (單人)', () => appState.toggleFamilyGroup(false), !appState.hasFamilyGroup)), const SizedBox(width: 8), Expanded(child: _buildOptBtn(context, '家族共建中', () => appState.toggleFamilyGroup(true), appState.hasFamilyGroup))]), const SizedBox(height: 24),
             const Text('2. 動態 AI 推薦場景 (連動雷達)', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold, fontSize: 12)), const SizedBox(height: 8),
-            Column(children: [_buildAiBtn(context, '情境 A：行動力衰退 (導購)', AiScenario.mobilityDecline, appState.currentScenario == AiScenario.mobilityDecline, Colors.orange), const SizedBox(height: 8), _buildAiBtn(context, '情境 B：防護力異常 (名單)', AiScenario.vitalsWarning, appState.currentScenario == AiScenario.vitalsWarning, Colors.redAccent), const SizedBox(height: 8), _buildAiBtn(context, '情境 C：連續滿分 (外溢保單)', AiScenario.perfectConsistency, appState.currentScenario == AiScenario.perfectConsistency, primaryEmerald)]),
+            Column(children: [_buildAiBtn(context, '情境 A：行動力衰退 (導購)', AiScenario.mobilityDecline, appState.currentScenario == AiScenario.mobilityDecline, Colors.orange), const SizedBox(height: 8), _buildAiBtn(context, '情境 B：防護力異常 (名單)', AiScenario.vitalsWarning, appState.currentScenario == AiScenario.vitalsWarning, Colors.redAccent), const SizedBox(height: 8), _buildAiBtn(context, '情境 C：連續滿分 (保單)', AiScenario.perfectConsistency, appState.currentScenario == AiScenario.perfectConsistency, primaryEmerald)]),
             const SizedBox(height: 16), const Divider(),
             ListTile(contentPadding: EdgeInsets.zero, leading: const Icon(Icons.format_size, color: darkTeal), title: const Text('樂齡大字模式', style: TextStyle(fontWeight: FontWeight.bold, color: darkTeal)), trailing: Switch(value: appState.textScale > 1.0, activeColor: primaryEmerald, onChanged: (v) { appState.toggleTextScale(); Navigator.pop(context); })),
             const SizedBox(height: 16), SizedBox(width: double.infinity, child: ElevatedButton(onPressed: () => Navigator.pop(context), style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1F2937), foregroundColor: Colors.white), child: const Text('關閉')))
@@ -198,7 +177,7 @@ class GodModeFab extends StatelessWidget {
 }
 
 // ==========================================
-// 📍 主結構導覽 (5 Tabs)
+// 📍 主結構導覽 
 // ==========================================
 class MainNavigator extends StatefulWidget { const MainNavigator({super.key}); @override State<MainNavigator> createState() => _MainNavigatorState(); }
 class _MainNavigatorState extends State<MainNavigator> {
@@ -214,7 +193,7 @@ class _MainNavigatorState extends State<MainNavigator> {
         destinations: const [
           NavigationDestination(icon: Icon(Icons.park_outlined), selectedIcon: Icon(Icons.park, color: darkTeal), label: '庭院'), 
           NavigationDestination(icon: Icon(Icons.sports_esports_outlined), selectedIcon: Icon(Icons.sports_esports, color: darkTeal), label: '任務'), 
-          NavigationDestination(icon: Icon(Icons.radar_outlined), selectedIcon: Icon(Icons.radar, color: darkTeal), label: '數據'), 
+          NavigationDestination(icon: Icon(Icons.health_and_safety_outlined), selectedIcon: Icon(Icons.health_and_safety, color: darkTeal), label: '守護'), 
           NavigationDestination(icon: Icon(Icons.account_balance_wallet_outlined), selectedIcon: Icon(Icons.account_balance_wallet, color: darkTeal), label: '票匣'), 
           NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person, color: darkTeal), label: '我的')
         ]
@@ -224,7 +203,7 @@ class _MainNavigatorState extends State<MainNavigator> {
 }
 
 // ==========================================
-// 📍 Tab 1: 共育大廳 (Home - 流量與變現樞紐)
+// 📍 Tab 1: 共育大廳 (Home) - 圖鑑版
 // ==========================================
 class HomeGardenPage extends StatelessWidget {
   const HomeGardenPage({super.key});
@@ -233,16 +212,18 @@ class HomeGardenPage extends StatelessWidget {
     if (appState.currentIdentity == UserIdentity.guest) return _buildGuestBlocker(context, '註冊解鎖您的專屬庭院', Icons.park);
 
     return Scaffold(
-      appBar: AppBar(title: Text(appState.hasFamilyGroup ? '林家專屬花園' : '我的個人花園', style: const TextStyle(color: darkTeal, fontWeight: FontWeight.w900))),
+      appBar: AppBar(
+        title: Text(appState.hasFamilyGroup ? '林家專屬花園' : '我的生態庭院', style: const TextStyle(color: darkTeal, fontWeight: FontWeight.w900)),
+        // 🔔 小鬧鐘強勢回歸！
+        actions: [IconButton(icon: const Icon(Icons.notifications_active_outlined, color: Colors.orange), onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('目前沒有新通知'))))],
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 10, 20, 80),
         children: [
-          // 家族共建視覺
           const GardenVisual(),
           const SizedBox(height: 16),
-          // 家族動態跑馬燈
           if (appState.hasFamilyGroup)
-            Container(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade200)), child: const Row(children: [Icon(Icons.notifications_active, color: Colors.orange, size: 16), SizedBox(width: 8), Expanded(child: Text('爸爸剛完成了專注力挑戰，為花園注入 20 滴水💧', style: TextStyle(fontSize: 12, color: Color(0xFF4B5563))))]))
+            Container(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade200)), child: const Row(children: [Icon(Icons.notifications_active, color: Colors.orange, size: 16), SizedBox(width: 8), Expanded(child: Text('爸爸剛完成了專注力挑戰，為台灣蝴蝶蘭注入 20 滴水💧', style: TextStyle(fontSize: 12, color: Color(0xFF4B5563))))]))
           else
             InkWell(onTap: () => _showInviteFlowDialog(context), child: Container(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), decoration: BoxDecoration(color: Colors.amber.shade50, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.amber.shade200)), child: const Row(children: [Icon(Icons.person_add, color: Colors.amber, size: 20), SizedBox(width: 8), Expanded(child: Text('邀請家人加入，解鎖 1.2 倍生長加速與週末寶箱！', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF92400E))))]))),
           
@@ -275,7 +256,7 @@ class HomeGardenPage extends StatelessWidget {
   }
 }
 
-// 🌸 科技擬物花園元件
+// 🌸 台灣植物圖鑑視覺 
 class GardenVisual extends StatefulWidget { const GardenVisual({super.key}); @override State<GardenVisual> createState() => _GardenVisualState(); }
 class _GardenVisualState extends State<GardenVisual> with SingleTickerProviderStateMixin {
   late AnimationController _controller; late Animation<double> _breathAnimation;
@@ -285,19 +266,19 @@ class _GardenVisualState extends State<GardenVisual> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     int drops = appState.waterDrops;
-    String emoji = drops < 3000 ? '🌱' : (drops < 8000 ? '🌿' : '🌻');
-    Color glowColor = drops < 3000 ? Colors.grey : (drops < 8000 ? primaryEmerald : Colors.amber);
+    String emoji = drops < 3000 ? '🌱' : (drops < 8000 ? '🌿' : '🌸'); // 🌸 代表蘭花/台灣原生花卉
+    Color glowColor = drops < 3000 ? Colors.grey : (drops < 8000 ? primaryEmerald : Colors.pinkAccent);
 
     return Container(
       height: 320, decoration: BoxDecoration(gradient: LinearGradient(colors: [const Color(0xFFE0F2FE), Colors.white], begin: Alignment.topCenter, end: Alignment.bottomCenter), borderRadius: BorderRadius.circular(32), border: Border.all(color: Colors.white, width: 2), boxShadow: [BoxShadow(color: Colors.blue.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 10))]),
       child: Stack(
         alignment: Alignment.center,
         children: [
-          Positioned(top: 20, child: Container(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), decoration: BoxDecoration(color: Colors.white.withOpacity(0.8), borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)]), child: const Text('🏆 本週目標：黃金向日葵綻放', style: TextStyle(fontWeight: FontWeight.bold, color: darkTeal, fontSize: 13)))),
+          // 圖鑑主題文字
+          Positioned(top: 20, child: Container(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), decoration: BoxDecoration(color: Colors.white.withOpacity(0.9), borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)]), child: const Text('📖 本週圖鑑解鎖：No.03 台灣蝴蝶蘭', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.pinkAccent, fontSize: 13)))),
           Positioned(bottom: 40, child: Container(width: 200, height: 60, decoration: BoxDecoration(shape: BoxShape.rectangle, borderRadius: BorderRadius.circular(100), gradient: LinearGradient(colors: [Colors.grey.shade200, Colors.white], begin: Alignment.topCenter, end: Alignment.bottomCenter), boxShadow: [BoxShadow(color: glowColor.withOpacity(0.3), blurRadius: 30, spreadRadius: 5)]))),
           Positioned(bottom: 60, child: AnimatedBuilder(animation: _breathAnimation, builder: (context, child) => Transform.scale(scale: _breathAnimation.value, child: Text(emoji, style: TextStyle(fontSize: 120, shadows: [Shadow(color: glowColor.withOpacity(0.5), blurRadius: 20)]))))),
           
-          // 家族貢獻者懸浮頭像
           if (appState.hasFamilyGroup) ...[
             Positioned(bottom: 150, left: 40, child: _buildContributorAvatar('爸爸', '45%', Colors.blue)),
             Positioned(bottom: 100, right: 30, child: _buildContributorAvatar('大兒子', '30%', Colors.teal)),
@@ -311,11 +292,7 @@ class _GardenVisualState extends State<GardenVisual> with SingleTickerProviderSt
   }
 
   Widget _buildContributorAvatar(String name, String percent, Color color) {
-    return Column(children: [
-      CircleAvatar(radius: 18, backgroundColor: color.withOpacity(0.2), child: Icon(Icons.person, color: color, size: 20)),
-      const SizedBox(height: 4),
-      Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: Colors.white.withOpacity(0.8), borderRadius: BorderRadius.circular(8)), child: Text('$name $percent', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: color)))
-    ]);
+    return Column(children: [CircleAvatar(radius: 18, backgroundColor: color.withOpacity(0.2), child: Icon(Icons.person, color: color, size: 20)), const SizedBox(height: 4), Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: Colors.white.withOpacity(0.8), borderRadius: BorderRadius.circular(8)), child: Text('$name $percent', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: color)))]);
   }
 
   void _showSponsorDialog(BuildContext context) {
@@ -324,7 +301,7 @@ class _GardenVisualState extends State<GardenVisual> with SingleTickerProviderSt
 }
 
 // ==========================================
-// 📍 Tab 2: 任務中心 (Tasks)
+// 📍 Tab 2: 任務中心 (加入衛教知識任務)
 // ==========================================
 class TaskCenterPage extends StatelessWidget {
   const TaskCenterPage({super.key});
@@ -342,6 +319,12 @@ class TaskCenterPage extends StatelessWidget {
           const SizedBox(height: 24),
           Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(gradient: LinearGradient(colors: [Colors.blue.shade50, Colors.blue.shade100]), borderRadius: BorderRadius.circular(16)), child: Row(children: [Container(padding: const EdgeInsets.all(12), decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle), child: const Icon(Icons.directions_walk, color: Colors.blue)), const SizedBox(width: 16), const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('今日步數自動同步：6,050 步', style: TextStyle(fontWeight: FontWeight.bold, color: darkTeal)), Text('點擊轉換為花園養分', style: TextStyle(fontSize: 12, color: Colors.blue))])), ElevatedButton(onPressed: () { appState.completeTask(50, 300); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('轉換成功！獲得 50 點 + 300 滴水'))); }, style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, foregroundColor: Colors.white, elevation: 0), child: const Text('轉換'))])),
           const SizedBox(height: 24),
+
+          // 醫院衛教文章變成任務！
+          const Row(children: [Icon(Icons.local_hospital, color: Colors.blue, size: 20), SizedBox(width: 8), Text('知識學習任務 (亞東醫院)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF1F2937)))]), const SizedBox(height: 12),
+          _buildHtmlStyleTaskCard(context, '解鎖大腦健康新趨勢', '閱讀專文學習防護', '亞東醫院 專欄', Icons.article, Colors.blue, 10, 10, 'https://www.femh.org.tw/magazine/viewmag.aspx?ID=11889'),
+          const SizedBox(height: 16),
+
           const Text('主動遊戲大挑戰', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF1F2937))), const SizedBox(height: 12),
           _buildHtmlStyleTaskCard(context, '生活好時光', '短期記憶防護', '桂格完膳 贊助', Icons.psychology, Colors.teal, 10, 10, 'https://memory-game-ad.vercel.app/'),
           _buildHtmlStyleTaskCard(context, '一日超商店長', '多工處理大挑戰', '全家便利商店 贊助', Icons.store, Colors.orange, 15, 15, 'https://execution-ad.vercel.app/'),
@@ -355,29 +338,29 @@ class TaskCenterPage extends StatelessWidget {
   Widget _buildHtmlStyleTaskCard(BuildContext context, String title, String sub, String sponsor, IconData icon, MaterialColor color, int pts, int drops, String url) {
     return GestureDetector(
       onTap: () { appState.completeTask(pts, drops); _launchUrl(url); },
-      child: Container(margin: const EdgeInsets.only(bottom: 12), padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey.shade200)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: color.shade50, border: Border.all(color: color.shade100), borderRadius: BorderRadius.circular(4)), child: Text('贊助 | $sponsor', style: TextStyle(fontSize: 10, color: color.shade700, fontWeight: FontWeight.bold))), const SizedBox(height: 10), Row(children: [Container(width: 44, height: 44, decoration: BoxDecoration(color: color.shade50, borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: color.shade500)), const SizedBox(width: 12), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF1F2937))), const SizedBox(height: 2), Text(sub, style: const TextStyle(fontSize: 12, color: Colors.grey))])), Column(crossAxisAlignment: CrossAxisAlignment.end, children: [Row(children: [Icon(Icons.monetization_on, size: 12, color: Colors.amber.shade700), const SizedBox(width: 2), Text('+$pts', style: TextStyle(color: Colors.amber.shade700, fontSize: 12, fontWeight: FontWeight.bold)), const SizedBox(width: 6), const Icon(Icons.water_drop, size: 12, color: Colors.blue), const SizedBox(width: 2), Text('+$drops', style: const TextStyle(color: Colors.blue, fontSize: 12, fontWeight: FontWeight.bold))]), const SizedBox(height: 6), Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4), decoration: BoxDecoration(color: darkTeal, borderRadius: BorderRadius.circular(12)), child: const Text('去挑戰', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)))])])])),
+      child: Container(margin: const EdgeInsets.only(bottom: 12), padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey.shade200)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: color.shade50, border: Border.all(color: color.shade100), borderRadius: BorderRadius.circular(4)), child: Text('贊助 | $sponsor', style: TextStyle(fontSize: 10, color: color.shade700, fontWeight: FontWeight.bold))), const SizedBox(height: 10), Row(children: [Container(width: 44, height: 44, decoration: BoxDecoration(color: color.shade50, borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: color.shade500)), const SizedBox(width: 12), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF1F2937))), const SizedBox(height: 2), Text(sub, style: const TextStyle(fontSize: 12, color: Colors.grey))])), Column(crossAxisAlignment: CrossAxisAlignment.end, children: [Row(children: [Icon(Icons.monetization_on, size: 12, color: Colors.amber.shade700), const SizedBox(width: 2), Text('+$pts', style: TextStyle(color: Colors.amber.shade700, fontSize: 12, fontWeight: FontWeight.bold)), const SizedBox(width: 6), const Icon(Icons.water_drop, size: 12, color: Colors.blue), const SizedBox(width: 2), Text('+$drops', style: const TextStyle(color: Colors.blue, fontSize: 12, fontWeight: FontWeight.bold))]), const SizedBox(height: 6), Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4), decoration: BoxDecoration(color: darkTeal, borderRadius: BorderRadius.circular(12)), child: Text(icon == Icons.article ? '去閱讀' : '去挑戰', style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)))])])])),
     );
   }
 }
 
 // ==========================================
-// 📍 Tab 3: 數據中心 (Dashboard - 雷達與親友關懷)
+// 📍 Tab 3: 健康守護 (Dashboard 改名)
 // ==========================================
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
   @override
   Widget build(BuildContext context) {
-    if (appState.currentIdentity == UserIdentity.guest) return _buildGuestBlocker(context, '註冊會員查看專屬數據', Icons.radar);
+    if (appState.currentIdentity == UserIdentity.guest) return _buildGuestBlocker(context, '註冊會員查看專屬數據', Icons.health_and_safety);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('全家健康與數據中心')),
+      appBar: AppBar(title: const Text('全家健康守護網')),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
           Container(padding: const EdgeInsets.all(24), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), border: Border.all(color: Colors.grey.shade200)), child: Column(children: [const Text('個人綜合健康防護網', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)), const SizedBox(height: 20), SizedBox(width: 200, height: 200, child: CustomPaint(painter: TriangleRadarPainter(stats: appState.radar3D)))])),
           const SizedBox(height: 16),
-          // 生理數據入口
-          Container(decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.grey.shade100)), child: ListTile(contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8), leading: Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(12)), child: Icon(Icons.monitor_heart, color: Colors.blue.shade600)), title: const Text('生理數據歷史趨勢', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)), subtitle: const Text('血壓、心跳、BMI及紀錄', style: TextStyle(fontSize: 12, color: Colors.grey)), trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HealthDataPage())))),
+          // 生理數據被弱化為「選填入口」
+          Container(decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.grey.shade100)), child: ListTile(contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8), leading: Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(12)), child: Icon(Icons.monitor_heart, color: Colors.blue.shade600)), title: const Text('生理數據與歷史趨勢', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)), subtitle: const Text('完善 BMI 等資料，可再獲 500 點！', style: TextStyle(fontSize: 12, color: Colors.orange)), trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HealthDataPage())))),
           const SizedBox(height: 32),
           
           const Text('家人健康日報與關懷', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF1F2937))), const SizedBox(height: 12),
@@ -392,25 +375,9 @@ class DashboardPage extends StatelessWidget {
   }
 
   Widget _buildFamilyReportCard(BuildContext context, String name, String state, String sub, MaterialColor color, bool showWarning) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12), padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: showWarning ? Colors.red.shade200 : Colors.grey.shade200)),
-      child: Column(children: [
-        Row(children: [
-          CircleAvatar(backgroundColor: color.shade50, child: Icon(Icons.person, color: color.shade600)), const SizedBox(width: 12),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(children: [Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)), const SizedBox(width: 8), Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: color.shade50, borderRadius: BorderRadius.circular(4)), child: Text(state, style: TextStyle(fontSize: 10, color: color.shade700, fontWeight: FontWeight.bold)))]), const SizedBox(height: 4), Text(sub, style: TextStyle(color: Colors.grey.shade600, fontSize: 12))])),
-        ]),
-        const SizedBox(height: 16),
-        Row(children: [
-          Expanded(child: OutlinedButton.icon(onPressed: () => _showGiftDialog(context, name), icon: const Icon(Icons.card_giftcard, size: 16), label: const Text('贈送點數'), style: OutlinedButton.styleFrom(foregroundColor: const Color(0xFFF59E0B), side: const BorderSide(color: Color(0xFFF59E0B))))),
-          if (showWarning) ...[const SizedBox(width: 8), Expanded(child: ElevatedButton.icon(onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已透過 Line 發送關懷訊息'))), icon: const Icon(Icons.favorite, size: 16), label: const Text('一鍵關心'), style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white, elevation: 0)))],
-        ])
-      ]),
-    );
+    return Container(margin: const EdgeInsets.only(bottom: 12), padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: showWarning ? Colors.red.shade200 : Colors.grey.shade200)), child: Column(children: [Row(children: [CircleAvatar(backgroundColor: color.shade50, child: Icon(Icons.person, color: color.shade600)), const SizedBox(width: 12), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(children: [Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)), const SizedBox(width: 8), Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: color.shade50, borderRadius: BorderRadius.circular(4)), child: Text(state, style: TextStyle(fontSize: 10, color: color.shade700, fontWeight: FontWeight.bold)))]), const SizedBox(height: 4), Text(sub, style: TextStyle(color: Colors.grey.shade600, fontSize: 12))]))]), const SizedBox(height: 16), Row(children: [Expanded(child: OutlinedButton.icon(onPressed: () => _showGiftDialog(context, name), icon: const Icon(Icons.card_giftcard, size: 16), label: const Text('贈送點數'), style: OutlinedButton.styleFrom(foregroundColor: const Color(0xFFF59E0B), side: const BorderSide(color: Color(0xFFF59E0B))))), if (showWarning) ...[const SizedBox(width: 8), Expanded(child: ElevatedButton.icon(onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已透過 Line 發送關懷訊息'))), icon: const Icon(Icons.favorite, size: 16), label: const Text('一鍵關心'), style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white, elevation: 0)))],])]));
   }
-
-  void _showGiftDialog(BuildContext context, String name) {
-    showDialog(context: context, builder: (c) => AlertDialog(backgroundColor: Colors.white, title: Text('轉贈給 $name'), content: const TextField(decoration: InputDecoration(labelText: '輸入轉贈點數', suffixText: 'Pts', border: OutlineInputBorder()), keyboardType: TextInputType.number), actions: [TextButton(onPressed: () => Navigator.pop(c), child: const Text('取消', style: TextStyle(color: Colors.grey))), ElevatedButton(onPressed: () { Navigator.pop(c); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('成功轉贈給 $name！'))); }, style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFF59E0B), foregroundColor: Colors.white), child: const Text('確認轉贈'))]));
-  }
+  void _showGiftDialog(BuildContext context, String name) { showDialog(context: context, builder: (c) => AlertDialog(backgroundColor: Colors.white, title: Text('轉贈給 $name'), content: const TextField(decoration: InputDecoration(labelText: '輸入轉贈點數', suffixText: 'Pts', border: OutlineInputBorder()), keyboardType: TextInputType.number), actions: [TextButton(onPressed: () => Navigator.pop(c), child: const Text('取消', style: TextStyle(color: Colors.grey))), ElevatedButton(onPressed: () { Navigator.pop(c); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('成功轉贈給 $name！'))); }, style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFF59E0B), foregroundColor: Colors.white), child: const Text('確認轉贈'))])); }
 }
 
 // ==========================================
@@ -423,14 +390,11 @@ class RewardsPage extends StatelessWidget {
     if (appState.currentIdentity == UserIdentity.guest) return _buildGuestBlocker(context, '註冊會員開始兌換獎品', Icons.account_balance_wallet);
     return DefaultTabController(length: 2, child: Scaffold(appBar: AppBar(title: const Text('權益票匣'), bottom: const TabBar(labelColor: darkTeal, indicatorColor: darkTeal, tabs: [Tab(text: '兌換中心'), Tab(text: '我的票匣')])), body: TabBarView(children: [ListView(padding: const EdgeInsets.all(20), children: [Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: bgGray, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey.shade200)), child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('可用健康點 (私有)', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1F2937))), Text('${appState.healthPoints} Pts', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.amber))])), const SizedBox(height: 24), const Text('點數兌換', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF1F2937))), const SizedBox(height: 12), _buildExchangeItem(context, 'HAPPY GO 10 點', 300), _buildExchangeItem(context, '全家 Let\'s Café 中杯拿鐵', 1500)]), ListView(padding: const EdgeInsets.all(20), children: [const Text('AI 專屬推薦與贊助', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.grey)), const SizedBox(height: 12), Container(decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.orange.shade200)), child: ListTile(contentPadding: const EdgeInsets.all(16), leading: Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.orange.shade50, borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.medication, color: Colors.orange)), title: const Text('大樹藥局 葡萄糖胺 \$50 折價券', style: TextStyle(fontWeight: FontWeight.bold)), subtitle: const Text('期限：本月底'), trailing: ElevatedButton(onPressed: (){}, style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white, elevation: 0), child: const Text('使用'))))])])));
   }
-  Widget _buildExchangeItem(BuildContext context, String title, int cost) {
-    bool canAfford = appState.healthPoints >= cost;
-    return Container(margin: const EdgeInsets.only(bottom: 12), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey.shade200)), child: ListTile(contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1F2937))), subtitle: Text('$cost Pts', style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)), trailing: ElevatedButton(onPressed: canAfford ? () {} : null, style: ElevatedButton.styleFrom(backgroundColor: darkTeal, foregroundColor: Colors.white, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))), child: const Text('兌換'))));
-  }
+  Widget _buildExchangeItem(BuildContext context, String title, int cost) { return Container(margin: const EdgeInsets.only(bottom: 12), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey.shade200)), child: ListTile(contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1F2937))), subtitle: Text('$cost Pts', style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)), trailing: ElevatedButton(onPressed: appState.healthPoints >= cost ? () {} : null, style: ElevatedButton.styleFrom(backgroundColor: darkTeal, foregroundColor: Colors.white, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))), child: const Text('兌換')))); }
 }
 
 // ==========================================
-// 📍 Tab 5: 會員中心 (Profile) 
+// 📍 Tab 5: 會員中心 (Profile) - 圖鑑牆更新
 // ==========================================
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -444,7 +408,10 @@ class ProfilePage extends StatelessWidget {
         children: [
           Padding(padding: const EdgeInsets.symmetric(horizontal: 20), child: Row(children: [const CircleAvatar(radius: 36, backgroundColor: Colors.white, child: Icon(Icons.account_circle, size: 72, color: Colors.grey)), const SizedBox(width: 16), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(appState.userName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: Color(0xFF1F2937))), const SizedBox(height: 4), Text('目前身分：${appState.title}', style: const TextStyle(color: Colors.grey, fontSize: 13))]))])),
           const SizedBox(height: 24),
-          if (appState.currentIdentity != UserIdentity.guest) ...[Padding(padding: const EdgeInsets.symmetric(horizontal: 20), child: InkWell(onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DummyPage(title: '成就勳章牆', icon: Icons.military_tech))), child: Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFFFFD54F), Color(0xFFFFB300)]), borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.orange.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))]), child: const Row(children: [Icon(Icons.military_tech, color: Colors.white, size: 36), SizedBox(width: 12), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('我的成就勳章牆', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)), Text('已收集 3 / 15 面勳章', style: TextStyle(color: Colors.white70, fontSize: 12))])), Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16)])))), const SizedBox(height: 24)],
+          
+          // 圖鑑牆入口
+          if (appState.currentIdentity != UserIdentity.guest) ...[Padding(padding: const EdgeInsets.symmetric(horizontal: 20), child: InkWell(onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DummyPage(title: '台灣圖鑑牆', icon: Icons.auto_stories))), child: Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF10B981), Color(0xFF047857)]), borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: primaryEmerald.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))]), child: const Row(children: [Icon(Icons.auto_stories, color: Colors.white, size: 36), SizedBox(width: 12), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('台灣特有種植物圖鑑', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)), Text('已解鎖 3 / 52 種植物', style: TextStyle(color: Colors.white70, fontSize: 12))])), Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16)])))), const SizedBox(height: 24)],
+          
           if (!isBound && appState.currentIdentity != UserIdentity.guest) ...[Padding(padding: const EdgeInsets.symmetric(horizontal: 20), child: Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.amber.shade50, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.amber.shade200)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Row(children: [Icon(Icons.link, color: Colors.amber), SizedBox(width: 8), Text('尚未綁定 HAPPY GO 帳號', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFB45309)))]), const SizedBox(height: 8), const Text('綁定後即可同步您的健康積分！', style: TextStyle(fontSize: 12, color: Color(0xFF78350F))), const SizedBox(height: 12), SizedBox(width: double.infinity, child: ElevatedButton(onPressed: (){}, style: ElevatedButton.styleFrom(backgroundColor: hgPurple, foregroundColor: Colors.white, elevation: 0), child: const Text('立即綁定 (HG SSO)')))]))), const SizedBox(height: 24)],
           
           _buildSectionTitle('我的數據與軌跡'),
@@ -467,10 +434,10 @@ class ProfilePage extends StatelessWidget {
   Widget _buildListTile(BuildContext context, IconData icon, String title, String? sub, Widget targetPage) => Column(children: [ListTile(leading: Icon(icon, color: darkTeal), title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 15)), subtitle: sub != null ? Text(sub, style: const TextStyle(fontSize: 12, color: Colors.grey)) : null, trailing: const Icon(Icons.chevron_right, size: 20, color: Colors.grey), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => targetPage))), const Divider(height: 1, indent: 56, endIndent: 16, color: Color(0xFFF3F4F6))]);
 }
 
-// 附屬資料頁 (Health Data, History, Settings, etc.)
+// 附屬資料頁 
 class HealthDataPage extends StatelessWidget {
   const HealthDataPage({super.key});
-  @override Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text('健康趨勢與生理紀錄')), body: ListView(padding: const EdgeInsets.all(20), children: [const Text('本週活動量', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF1F2937))), const SizedBox(height: 12), Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey.shade200)), child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [_buildDataStat('👣 平均步數', '8,432', '步'), _buildDataStat('🔥 消耗熱量', '320', 'kcal')])), const SizedBox(height: 24), const Text('生理數據紀錄', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF1F2937))), const SizedBox(height: 12), _buildDataCard('血壓', '118 / 75', 'mmHg', '正常', Colors.blue), _buildDataCard('靜止心率', '72', 'bpm', '正常', Colors.redAccent), _buildDataCard('BMI', '23.4', '', '標準', primaryEmerald), const SizedBox(height: 24), const Text('過去三個月紀錄 (最多顯示 100 筆)', style: TextStyle(color: Colors.grey, fontSize: 12)), const SizedBox(height: 8), Container(height: 150, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey.shade200)), child: const Center(child: Text('📊 折線圖表區塊 (開發中)', style: TextStyle(color: Colors.grey))))]));
+  @override Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text('生理數據與紀錄')), body: ListView(padding: const EdgeInsets.all(20), children: [Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.amber.shade50, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.amber.shade200)), child: const Row(children: [Icon(Icons.edit_note, color: Colors.amber), SizedBox(width: 8), Expanded(child: Text('完善身高、體重資料，解鎖精準 BMI 預測，並獲得 500 點獎勵！', style: TextStyle(color: Color(0xFF92400E), fontSize: 13)))])), const SizedBox(height: 24), const Text('本週活動量', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF1F2937))), const SizedBox(height: 12), Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey.shade200)), child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [_buildDataStat('👣 平均步數', '8,432', '步'), _buildDataStat('🔥 消耗熱量', '320', 'kcal')])), const SizedBox(height: 24), const Text('生理數據紀錄', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF1F2937))), const SizedBox(height: 12), _buildDataCard('血壓', '118 / 75', 'mmHg', '正常', Colors.blue), _buildDataCard('靜止心率', '72', 'bpm', '正常', Colors.redAccent), _buildDataCard('BMI', '--', '', '尚未填寫', Colors.grey), const SizedBox(height: 24), const Text('過去三個月紀錄 (最多顯示 100 筆)', style: TextStyle(color: Colors.grey, fontSize: 12)), const SizedBox(height: 8), Container(height: 150, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey.shade200)), child: const Center(child: Text('📊 折線圖表區塊 (開發中)', style: TextStyle(color: Colors.grey))))]));
   Widget _buildDataStat(String title, String val, String unit) => Column(children: [Text(title, style: const TextStyle(color: Colors.grey, fontSize: 12)), const SizedBox(height: 8), Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [Text(val, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: darkTeal)), const SizedBox(width: 4), Text(unit, style: const TextStyle(fontSize: 12, color: Colors.grey))])]);
   Widget _buildDataCard(String title, String val, String unit, String status, Color color) => Container(margin: const EdgeInsets.only(bottom: 12), padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey.shade200)), child: Row(children: [Expanded(child: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15))), Text(val, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1F2937))), const SizedBox(width: 4), Text(unit, style: const TextStyle(fontSize: 12, color: Colors.grey)), const SizedBox(width: 16), Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)), child: Text(status, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold)))]));
 }
